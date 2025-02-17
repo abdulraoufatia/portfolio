@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { articlesApi, Article } from '../lib/api';
 
 function Articles() {
@@ -68,9 +69,12 @@ function Articles() {
                     <span>{article.read_time}</span>
                   </div>
                 </div>
-                <button className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors">
+                <Link 
+                  to={`/articles/${article.id}`}
+                  className="inline-block mt-4 px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+                >
                   Read More
-                </button>
+                </Link>
               </div>
             </div>
           </motion.article>
