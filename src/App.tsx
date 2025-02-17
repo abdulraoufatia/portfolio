@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Projects from './pages/Projects';
 import Articles from './pages/Articles';
+import ArticleDetail from './pages/ArticleDetail';
 import Experience from './pages/Experience';
 import Auth from './pages/Auth';
 import Admin from './pages/Admin';
@@ -34,6 +35,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="projects" element={<Projects />} />
             <Route path="articles" element={<Articles />} />
+            <Route path="articles/:id" element={<ArticleDetail />} />
             <Route path="experience" element={<Experience />} />
             <Route path="auth" element={<Auth />} />
             <Route
