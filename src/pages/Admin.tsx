@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, LogOut, X } from 'lucide-react';
 import { projectsApi, articlesApi, experiencesApi, Project, Article, Experience } from '../lib/api';
+import MDEditor from '@uiw/react-md-editor';
 
 interface ProjectFormData {
   title: string;
@@ -466,14 +467,15 @@ function Admin() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Content</label>
-                  <textarea
-                    value={articleForm.content}
-                    onChange={(e) => setArticleForm({ ...articleForm, content: e.target.value })}
-                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    rows={6}
-                    required
-                  />
+                  <label className="block text-sm font-medium mb-2">Content (Markdown)</label>
+                  <div data-color-mode="dark">
+                    <MDEditor
+                      value={articleForm.content}
+                      onChange={(value) => setArticleForm({ ...articleForm, content: value || '' })}
+                      preview="edit"
+                      height={400}
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Image URL</label>
