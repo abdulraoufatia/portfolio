@@ -3,6 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowLeft } from 'lucide-react';
 import { articlesApi, Article } from '../lib/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 function ArticleDetail() {
   const { id } = useParams();
@@ -98,8 +101,14 @@ function ArticleDetail() {
             <div className="flex-grow h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
           </div>
 
-          <div className="text-gray-200 leading-relaxed whitespace-pre-wrap">
-            {article.content}
+          <div className="markdown-content">
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+              className="text-gray-200 leading-relaxed"
+            >
+              {article.content}
+            </ReactMarkdown>
           </div>
         </div>
       </article>
