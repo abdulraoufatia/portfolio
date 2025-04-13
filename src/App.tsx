@@ -7,16 +7,19 @@ import Projects from './pages/Projects';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
 import Experience from './pages/Experience';
+import Education from './pages/Education';
 import Auth from './pages/Auth';
 import Admin from './pages/Admin';
 import { useAuth } from './contexts/AuthContext';
+import NotFound from './pages/NotFound';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Protected route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!user) {
@@ -28,28 +31,54 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="projects" element={<Projects />} />
-            <Route path="articles" element={<Articles />} />
-            <Route path="articles/:id" element={<ArticleDetail />} />
-            <Route path="experience" element={<Experience />} />
-            <Route path="auth" element={<Auth />} />
-            <Route
-              path="admin"
-              element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="projects" element={
+                <ErrorBoundary>
+                  <Projects />
+                </ErrorBoundary>
+              } />
+              <Route path="articles" element={
+                <ErrorBoundary>
+                  <Articles />
+                </ErrorBoundary>
+              } />
+              <Route path="articles/:id" element={
+                <ErrorBoundary>
+                  <ArticleDetail />
+                </ErrorBoundary>
+              } />
+              <Route path="experience" element={
+                <ErrorBoundary>
+                  <Experience />
+                </ErrorBoundary>
+              } />
+              <Route path="education" element={
+                <ErrorBoundary>
+                  <Education />
+                </ErrorBoundary>
+              } />
+              <Route path="auth" element={<Auth />} />
+              <Route
+                path="admin"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <Admin />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
