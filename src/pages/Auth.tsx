@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Lock, Mail, AlertCircle, QrCode } from 'lucide-react';
+import { Lock, Mail, AlertCircle, QrCode, Shield } from 'lucide-react';
 import { auth } from '../lib/auth';
 
 function Auth() {
@@ -60,9 +60,12 @@ function Auth() {
         animate={{ opacity: 1, y: 0 }}
         className="glass p-8 rounded-lg w-full max-w-md"
       >
-        <h2 className="text-3xl font-bold text-center mb-8 gradient-text">
-          Admin Login
-        </h2>
+        <div className="flex items-center justify-center mb-6">
+          <Shield className="text-blue-400 mr-2" size={28} />
+          <h2 className="text-3xl font-bold text-center gradient-text">
+            Admin Login
+          </h2>
+        </div>
         
         {error && (
           <div className="bg-red-500/20 text-red-300 p-4 rounded-lg mb-4 flex items-start">
@@ -81,12 +84,13 @@ function Auth() {
                 <input
                   type="text"
                   value={totpCode}
-                  onChange={(e) => setTotpCode(e.target.value)}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/[^0-9]/g, ''))}
                   className="w-full pl-10 pr-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                   maxLength={6}
                   pattern="\d{6}"
                   disabled={isSubmitting}
+                  autoComplete="one-time-code"
                 />
               </div>
             </div>
@@ -114,6 +118,7 @@ function Auth() {
                   pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                   title="Please enter a valid email address"
                   disabled={isSubmitting}
+                  autoComplete="username"
                 />
               </div>
             </div>
@@ -130,6 +135,7 @@ function Auth() {
                   required
                   minLength={8}
                   disabled={isSubmitting}
+                  autoComplete="current-password"
                 />
               </div>
             </div>

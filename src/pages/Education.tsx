@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Calendar, RefreshCw } from 'lucide-react';
-import { experiencesApi, Experience } from '../lib/api';
+import { GraduationCap, Calendar, RefreshCw } from 'lucide-react';
+import { educationApi, Education } from '../lib/api';
 
-function ExperiencePage() {
-  const [experiences, setExperiences] = useState<Experience[]>([]);
+function EducationPage() {
+  const [educationList, setEducationList] = useState<Education[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
 
-  const loadExperiences = async () => {
+  const loadEducation = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await experiencesApi.getAll();
-      setExperiences(data);
+      const data = await educationApi.getAll();
+      setEducationList(data);
     } catch (err) {
-      console.error('Failed to load experiences:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load experiences');
+      console.error('Failed to load education:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load education');
     } finally {
       setLoading(false);
       setRetrying(false);
@@ -25,12 +25,12 @@ function ExperiencePage() {
   };
 
   useEffect(() => {
-    loadExperiences();
+    loadEducation();
   }, []);
 
   const handleRetry = () => {
     setRetrying(true);
-    loadExperiences();
+    loadEducation();
   };
 
   if (loading) {
@@ -66,14 +66,14 @@ function ExperiencePage() {
     );
   }
 
-  if (experiences.length === 0) {
+  if (educationList.length === 0) {
     return (
       <div className="container mx-auto text-center py-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Professional Experience</h1>
+          <h1 className="text-4xl font-bold mb-4">Education</h1>
           <div className="w-24 h-1 bg-blue-500/50 mx-auto rounded-full"></div>
         </div>
-        <p className="text-gray-400">No experience entries found.</p>
+        <p className="text-gray-400">No education entries found.</p>
       </div>
     );
   }
@@ -86,16 +86,16 @@ function ExperiencePage() {
       className="container mx-auto"
     >
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Professional Experience</h1>
+        <h1 className="text-4xl font-bold mb-4">Education</h1>
         <div className="w-24 h-1 bg-blue-500/50 mx-auto rounded-full"></div>
       </div>
       <div className="relative">
         {/* Timeline line */}
         <div className="absolute left-0 md:left-1/2 h-full w-0.5 bg-blue-500/50 transform -translate-x-1/2"></div>
         
-        {experiences.map((exp, index) => (
+        {educationList.map((edu, index) => (
           <motion.div
-            key={exp.id}
+            key={edu.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
@@ -108,25 +108,15 @@ function ExperiencePage() {
             
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
               <div className="flex items-center mb-4">
-                <Building2 className="mr-2 text-blue-400" />
-                <h3 className="text-xl font-bold">{exp.company}</h3>
+                <GraduationCap className="mr-2 text-blue-400" />
+                <h3 className="text-xl font-bold">{edu.institution}</h3>
               </div>
-              <h4 className="text-lg text-blue-400 mb-2">{exp.position}</h4>
+              <h4 className="text-lg text-blue-400 mb-2">{edu.degree} in {edu.field}</h4>
               <div className="flex items-center text-gray-400 mb-4">
                 <Calendar className="mr-2" size={16} />
-                <span>{exp.period}</span>
+                <span>{edu.start_date} - {edu.end_date}</span>
               </div>
-              <p className="text-gray-300 mb-4">{exp.description}</p>
-              <div className="flex flex-wrap gap-2">
-                {exp.technologies.map((tech, techIndex) => (
-                  <span
-                    key={techIndex}
-                    className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
+              <p className="text-gray-300">{edu.description}</p>
             </div>
           </motion.div>
         ))}
@@ -135,4 +125,4 @@ function ExperiencePage() {
   );
 }
 
-export default ExperiencePage;
+export default EducationPage;

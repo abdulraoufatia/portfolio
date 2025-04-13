@@ -58,6 +58,8 @@ export interface Database {
           created_at: string
           updated_at: string
           user_id: string
+          category: string
+          slug: string
         }
         Insert: {
           id?: string
@@ -69,6 +71,8 @@ export interface Database {
           created_at?: string
           updated_at?: string
           user_id: string
+          category: string
+          slug?: string
         }
         Update: {
           id?: string
@@ -80,6 +84,8 @@ export interface Database {
           created_at?: string
           updated_at?: string
           user_id?: string
+          category?: string
+          slug?: string
         }
       }
       experiences: {
@@ -112,6 +118,44 @@ export interface Database {
           period?: string
           description?: string
           technologies?: string[]
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+      }
+      education: {
+        Row: {
+          id: string
+          institution: string
+          degree: string
+          field: string
+          start_date: string
+          end_date: string
+          description: string
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          institution: string
+          degree: string
+          field: string
+          start_date: string
+          end_date: string
+          description: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          institution?: string
+          degree?: string
+          field?: string
+          start_date?: string
+          end_date?: string
+          description?: string
           created_at?: string
           updated_at?: string
           user_id?: string

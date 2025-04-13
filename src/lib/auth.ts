@@ -54,48 +54,9 @@ const validatePassword = (password: string): { isValid: boolean; message: string
 };
 
 export const auth = {
+  // Sign up is disabled for security - only admin can create accounts
   async signUp(email: string, password: string) {
-    // Validate inputs
-    if (!validateEmail(email)) {
-      throw new Error('Invalid email format');
-    }
-
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      throw new Error(passwordValidation.message);
-    }
-
-    // Sanitize email
-    email = email.toLowerCase().trim();
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      
-      if (error) {
-        if (error.message.includes('User already registered')) {
-          throw new Error('An account with this email already exists. Please sign in instead.');
-        }
-        throw error;
-      }
-
-      // Enable 2FA for the new user
-      if (data.user) {
-        await this.enroll2FA(data.user.id);
-      }
-
-      return data;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Sign up failed. Please try again.');
-    }
+    throw new Error('Sign up is disabled. Please contact the administrator.');
   },
 
   async signIn(email: string, password: string, totpCode?: string) {
@@ -191,19 +152,48 @@ export const auth = {
 
   async signOut() {
     try {
+      // Clear any local storage items related to authentication
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+      
+      // Then attempt to sign out from Supabase
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase sign out error:', error);
+      }
     } catch (error) {
-      throw new Error('Sign out failed. Please try again.');
+      console.error('Sign out error:', error);
+      // Even if there's an error with the API call, ensure local storage is cleared
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
     }
   },
 
   async getCurrentUser() {
     try {
+      // First check if we have a session in local storage
+      const session = localStorage.getItem('supabase.auth.token');
+      if (!session) {
+        return null;
+      }
+      
       const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) throw error;
+      
+      if (error) {
+        // If there's an error getting the user, clear any invalid session
+        console.error('Get user error:', error);
+        // Clear invalid session data
+        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.removeItem('supabase.auth.token');
+        return null;
+      }
+      
       return user;
     } catch (error) {
+      console.error('Get current user error:', error);
+      // Clear any potentially corrupted session data
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
       return null;
     }
   },

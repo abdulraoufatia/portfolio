@@ -24,7 +24,7 @@ function Home() {
         transition={{ delay: 0.4 }}
         className="text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed"
       >
-        Platform Engineering Professional and Biomedical Science Graduate
+        Platform Engineering Professional and Mature Biomedical Science Undergraduate
       </motion.p>
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

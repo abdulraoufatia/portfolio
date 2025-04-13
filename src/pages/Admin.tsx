@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, LogOut, X } from 'lucide-react';
-import { projectsApi, articlesApi, experiencesApi, Project, Article, Experience } from '../lib/api';
+import { projectsApi, articlesApi, experiencesApi, educationApi, Project, Article, Experience, Education, generateSlug } from '../lib/api';
 import MDEditor from '@uiw/react-md-editor';
+import DeleteConfirmationDialog from '../components/DeleteConfirmationDialog';
 
 interface ProjectFormData {
   title: string;
@@ -20,6 +21,8 @@ interface ArticleFormData {
   content: string;
   image_url: string;
   read_time: string;
+  category: string;
+  slug: string;
 }
 
 interface ExperienceFormData {
@@ -30,16 +33,28 @@ interface ExperienceFormData {
   technologies: string;
 }
 
+interface EducationFormData {
+  institution: string;
+  degree: string;
+  field: string;
+  start_date: string;
+  end_date: string;
+  description: string;
+}
+
 function Admin() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [activeTab, setActiveTab] = useState<'projects' | 'articles' | 'experiences'>('projects');
+  const [educationList, setEducationList] = useState<Education[]>([]);
+  const [activeTab, setActiveTab] = useState<'projects' | 'articles' | 'experiences' | 'education'>('projects');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   const [projectForm, setProjectForm] = useState<ProjectFormData>({
     title: '',
@@ -55,6 +70,8 @@ function Admin() {
     content: '',
     image_url: '',
     read_time: '',
+    category: 'technology',
+    slug: '',
   });
 
   const [experienceForm, setExperienceForm] = useState<ExperienceFormData>({
@@ -65,6 +82,15 @@ function Admin() {
     technologies: '',
   });
 
+  const [educationForm, setEducationForm] = useState<EducationFormData>({
+    institution: '',
+    degree: '',
+    field: '',
+    start_date: '',
+    end_date: '',
+    description: '',
+  });
+
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -73,6 +99,16 @@ function Admin() {
 
     loadData();
   }, [user, navigate]);
+
+  // Generate slug when title changes
+  useEffect(() => {
+    if (articleForm.title && !editingId) {
+      setArticleForm(prev => ({
+        ...prev,
+        slug: generateSlug(prev.title)
+      }));
+    }
+  }, [articleForm.title, editingId]);
 
   const handleSignOut = async () => {
     try {
@@ -85,14 +121,16 @@ function Admin() {
   };
 
   const loadData = async () => {
-    const [projectsData, articlesData, experiencesData] = await Promise.all([
+    const [projectsData, articlesData, experiencesData, educationData] = await Promise.all([
       projectsApi.getAll(),
       articlesApi.getAll(),
-      experiencesApi.getAll()
+      experiencesApi.getAll(),
+      educationApi.getAll()
     ]);
     setProjects(projectsData);
     setArticles(articlesData);
     setExperiences(experiencesData);
+    setEducationList(educationData);
   };
 
   const resetForms = () => {
@@ -109,6 +147,8 @@ function Admin() {
       content: '',
       image_url: '',
       read_time: '',
+      category: 'technology',
+      slug: '',
     });
     setExperienceForm({
       company: '',
@@ -117,10 +157,18 @@ function Admin() {
       description: '',
       technologies: '',
     });
+    setEducationForm({
+      institution: '',
+      degree: '',
+      field: '',
+      start_date: '',
+      end_date: '',
+      description: '',
+    });
     setEditingId(null);
   };
 
-  const handleEdit = (item: Project | Article | Experience) => {
+  const handleEdit = (item: Project | Article | Experience | Education) => {
     setEditingId(item.id);
     if ('github_url' in item) {
       setProjectForm({
@@ -128,31 +176,49 @@ function Admin() {
         tags: item.tags.join(', '),
       });
     } else if ('read_time' in item) {
-      setArticleForm(item);
-    } else {
+      setArticleForm({
+        ...item,
+        category: item.category || 'technology',
+        slug: item.slug || generateSlug(item.title),
+      });
+    } else if ('technologies' in item) {
       setExperienceForm({
         ...item,
         technologies: item.technologies.join(', '),
+      });
+    } else {
+      setEducationForm({
+        ...item,
       });
     }
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+  const confirmDelete = (id: string) => {
+    setItemToDelete(id);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+    
     try {
       if (activeTab === 'projects') {
-        await projectsApi.delete(id);
+        await projectsApi.delete(itemToDelete);
       } else if (activeTab === 'articles') {
-        await articlesApi.delete(id);
+        await articlesApi.delete(itemToDelete);
+      } else if (activeTab === 'experiences') {
+        await experiencesApi.delete(itemToDelete);
       } else {
-        await experiencesApi.delete(id);
+        await educationApi.delete(itemToDelete);
       }
       await loadData();
     } catch (error) {
       console.error('Delete failed:', error);
       alert('Failed to delete item');
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -184,7 +250,7 @@ function Admin() {
         } else {
           await articlesApi.create(articleData);
         }
-      } else {
+      } else if (activeTab === 'experiences') {
         const experienceData = {
           ...experienceForm,
           technologies: experienceForm.technologies.split(',').map(tech => tech.trim()),
@@ -196,6 +262,17 @@ function Admin() {
         } else {
           await experiencesApi.create(experienceData);
         }
+      } else {
+        const educationData = {
+          ...educationForm,
+          user_id: user!.id,
+        };
+
+        if (editingId) {
+          await educationApi.update(editingId, educationData);
+        } else {
+          await educationApi.create(educationData);
+        }
       }
 
       await loadData();
@@ -206,6 +283,16 @@ function Admin() {
       alert('Failed to save item');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getItemTypeName = () => {
+    switch (activeTab) {
+      case 'projects': return 'project';
+      case 'articles': return 'article';
+      case 'experiences': return 'experience';
+      case 'education': return 'education';
+      default: return 'item';
     }
   };
 
@@ -223,7 +310,7 @@ function Admin() {
       </div>
 
       <div className="glass rounded-lg p-6">
-        <div className="flex space-x-4 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => {
               setActiveTab('projects');
@@ -266,6 +353,20 @@ function Admin() {
           >
             Experiences
           </button>
+          <button
+            onClick={() => {
+              setActiveTab('education');
+              setShowForm(false);
+              resetForms();
+            }}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'education'
+                ? 'bg-blue-500 text-white'
+                : 'bg-white/10 hover:bg-white/20'
+            }`}
+          >
+            Education
+          </button>
         </div>
 
         {!showForm ? (
@@ -275,7 +376,7 @@ function Admin() {
               className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors mb-6"
             >
               <Plus size={20} className="mr-2" />
-              Add {activeTab === 'projects' ? 'Project' : activeTab === 'articles' ? 'Article' : 'Experience'}
+              Add {activeTab === 'projects' ? 'Project' : activeTab === 'articles' ? 'Article' : activeTab === 'experiences' ? 'Experience' : 'Education'}
             </button>
 
             <div className="space-y-4">
@@ -298,7 +399,7 @@ function Admin() {
                       <Edit size={20} className="text-blue-400" />
                     </button>
                     <button
-                      onClick={() => handleDelete(project.id)}
+                      onClick={() => confirmDelete(project.id)}
                       className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                     >
                       <Trash2 size={20} className="text-red-400" />
@@ -315,8 +416,18 @@ function Admin() {
                   className="flex items-center justify-between p-4 bg-white/5 rounded-lg"
                 >
                   <div>
-                    <h3 className="font-semibold">{article.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold">{article.title}</h3>
+                      <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full text-xs">
+                        {article.category}
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-400">{article.excerpt}</p>
+                    {article.slug && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Slug: {article.slug}
+                      </p>
+                    )}
                   </div>
                   <div className="flex space-x-2">
                     <button
@@ -326,7 +437,7 @@ function Admin() {
                       <Edit size={20} className="text-blue-400" />
                     </button>
                     <button
-                      onClick={() => handleDelete(article.id)}
+                      onClick={() => confirmDelete(article.id)}
                       className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                     >
                       <Trash2 size={20} className="text-red-400" />
@@ -355,7 +466,36 @@ function Admin() {
                       <Edit size={20} className="text-blue-400" />
                     </button>
                     <button
-                      onClick={() => handleDelete(experience.id)}
+                      onClick={() => confirmDelete(experience.id)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={20} className="text-red-400" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+
+              {activeTab === 'education' && educationList.map((education) => (
+                <motion.div
+                  key={education.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg"
+                >
+                  <div>
+                    <h3 className="font-semibold">{education.institution}</h3>
+                    <p className="text-sm text-blue-400">{education.degree} in {education.field}</p>
+                    <p className="text-sm text-gray-400">{education.start_date} - {education.end_date}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(education)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <Edit size={20} className="text-blue-400" />
+                    </button>
+                    <button
+                      onClick={() => confirmDelete(education.id)}
                       className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                     >
                       <Trash2 size={20} className="text-red-400" />
@@ -374,7 +514,7 @@ function Admin() {
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">
-                {editingId ? 'Edit' : 'Add'} {activeTab === 'projects' ? 'Project' : activeTab === 'articles' ? 'Article' : 'Experience'}
+                {editingId ? 'Edit' : 'Add'} {activeTab === 'projects' ? 'Project' : activeTab === 'articles' ? 'Article' : activeTab === 'experiences' ? 'Experience' : 'Education'}
               </h2>
               <button
                 type="button"
@@ -455,6 +595,31 @@ function Admin() {
                     className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Slug (URL-friendly name)</label>
+                  <input
+                    type="text"
+                    value={articleForm.slug}
+                    onChange={(e) => setArticleForm({ ...articleForm, slug: e.target.value })}
+                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    This will be used in the URL: /articles/{articleForm.slug || 'example-article'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Category</label>
+                  <select
+                    value={articleForm.category}
+                    onChange={(e) => setArticleForm({ ...articleForm, category: e.target.value })}
+                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="technology">Technology</option>
+                    <option value="biology">Biology</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Excerpt</label>
@@ -558,6 +723,75 @@ function Admin() {
               </>
             )}
 
+            {activeTab === 'education' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Institution</label>
+                  <input
+                    type="text"
+                    value={educationForm.institution}
+                    onChange={(e) => setEducationForm({ ...educationForm, institution: e.target.value })}
+                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Degree</label >
+                  <input
+                    type="text"
+                    value={educationForm.degree}
+                    onChange={(e) => setEducationForm({ ...educationForm, degree: e.target.value })}
+                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Bachelor of Science"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Field of Study</label>
+                  <input
+                    type="text"
+                    value={educationForm.field}
+                    onChange={(e) => setEducationForm({ ...educationForm, field: e.target.value })}
+                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Biomedical Science"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Start Date</label>
+                  <input
+                    type="text"
+                    value={educationForm.start_date}
+                    onChange={(e) => setEducationForm({ ...educationForm, start_date: e.target.value })}
+                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="2020"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">End Date</label>
+                  <input
+                    type="text"
+                    value={educationForm.end_date}
+                    onChange={(e) => setEducationForm({ ...educationForm, end_date: e.target.value })}
+                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="2024 (or Present)"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <textarea
+                    value={educationForm.description}
+                    onChange={(e) => setEducationForm({ ...educationForm, description: e.target.value })}
+                    className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    required
+                  />
+                </div>
+              </>
+            )}
+
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
@@ -580,6 +814,16 @@ function Admin() {
           </motion.form>
         )}
       </div>
+
+      <DeleteConfirmationDialog
+        isOpen={deleteDialogOpen}
+        itemType={getItemTypeName()}
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setDeleteDialogOpen(false);
+          setItemToDelete(null);
+        }}
+      />
     </div>
   );
 }

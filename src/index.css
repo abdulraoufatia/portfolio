@@ -160,7 +160,7 @@ body {
 
 .markdown-content th,
 .markdown-content td {
-  @apply border border-white/10 px-4 py-2;
+  @apply border border-white/10 px-4 py-2 text-left align-top;
 }
 
 .markdown-content th {
@@ -187,4 +187,32 @@ body {
 
 .w-md-editor-content {
   @apply bg-transparent !important;
+}
+
+/* Fix for markdown tables */
+.markdown-content table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+  word-break: break-word;
+  vertical-align: top;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  line-height: 1.5;
+}
+
+/* Fix for pipe symbol alignment in markdown editor */
+.w-md-editor-text-input,
+.w-md-editor-text-pre > code {
+  font-family: 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace !important;
+  line-height: 1.6 !important;
+  tab-size: 4 !important;
+}
+
+.w-md-editor-text {
+  font-feature-settings: "liga" 0 !important;
+  letter-spacing: normal !important;
 }

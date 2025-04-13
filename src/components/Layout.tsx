@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Home, Briefcase, BookText, FolderGit2, LogOut, Menu, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Home, Briefcase, BookText, FolderGit2, LogOut, Menu, X, GraduationCap, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import ConnectionStatus from './ConnectionStatus';
 
 function Layout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -16,7 +23,8 @@ function Layout() {
 
   const navItems = [
     { to: '/', icon: Home, label: 'Home' },
-    { to: '/experience', icon: Briefcase, label: 'Experience' },
+    { to: '/experience', icon: Briefcase, label: 'Experience' , label: 'Experience' },
+    { to: '/education', icon: GraduationCap, label: 'Education' },
     { to: '/projects', icon: FolderGit2, label: 'Projects' },
     { to: '/articles', icon: BookText, label: 'Articles' },
   ];
@@ -61,11 +69,13 @@ function Layout() {
                       }`
                     }
                   >
+                    <Shield size={20} />
                     <span>Admin</span>
                   </NavLink>
                   <button
                     onClick={handleSignOut}
                     className="flex items-center space-x-2 hover:text-red-400 transition-colors"
+                    aria-label="Sign Out"
                   >
                     <LogOut size={20} />
                     <span>Sign Out</span>
@@ -78,6 +88,8 @@ function Layout() {
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMenuOpen}
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -120,6 +132,7 @@ function Layout() {
                         }`
                       }
                     >
+                      <Shield size={20} />
                       <span>Admin</span>
                     </NavLink>
                     <button
@@ -128,6 +141,7 @@ function Layout() {
                         setIsMenuOpen(false);
                       }}
                       className="flex items-center space-x-2 py-2 w-full hover:text-red-400 transition-colors"
+                      aria-label="Sign Out"
                     >
                       <LogOut size={20} />
                       <span>Sign Out</span>
@@ -146,6 +160,9 @@ function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* Connection Status Indicator */}
+      <ConnectionStatus />
     </div>
   );
 }
