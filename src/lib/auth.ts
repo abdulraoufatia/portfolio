@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { AuthError } from '@supabase/supabase-js';
 
 // Rate limiting implementation
 const loginAttempts = new Map<string, { count: number; timestamp: number }>();
@@ -34,31 +33,7 @@ const validateEmail = (email: string): boolean => {
   return emailRegex.test(email) && email.length <= 255;
 };
 
-const validatePassword = (password: string): { isValid: boolean; message: string } => {
-  if (password.length < 8) {
-    return { isValid: false, message: 'Password must be at least 8 characters long' };
-  }
-  if (!/[A-Z]/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one uppercase letter' };
-  }
-  if (!/[a-z]/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one lowercase letter' };
-  }
-  if (!/[0-9]/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one number' };
-  }
-  if (!/[!@#$%^&*]/.test(password)) {
-    return { isValid: false, message: 'Password must contain at least one special character (!@#$%^&*)' };
-  }
-  return { isValid: true, message: '' };
-};
-
 export const auth = {
-  // Sign up is disabled for security - only admin can create accounts
-  async signUp(email: string, password: string) {
-    throw new Error('Sign up is disabled. Please contact the administrator.');
-  },
-
   async signIn(email: string, password: string, totpCode?: string) {
     // Validate email
     if (!validateEmail(email)) {
@@ -119,7 +94,7 @@ export const auth = {
     }
   },
 
-  async enroll2FA(userId: string) {
+  async enroll2FA() {
     try {
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp'
@@ -138,12 +113,11 @@ export const auth = {
 
   async verify2FA(totpCode: string) {
     try {
-      const { data, error } = await supabase.auth.mfa.verify({
+      const { data } = await supabase.auth.mfa.verify({
         factorId: 'totp',
         code: totpCode
       });
 
-      if (error) throw error;
       return data;
     } catch (error) {
       throw new Error('Invalid 2FA code. Please try again.');
@@ -152,18 +126,12 @@ export const auth = {
 
   async signOut() {
     try {
-      // Clear any local storage items related to authentication
       localStorage.removeItem('supabase.auth.token');
       sessionStorage.removeItem('supabase.auth.token');
       
-      // Then attempt to sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Supabase sign out error:', error);
-      }
+      await supabase.auth.signOut();
     } catch (error) {
       console.error('Sign out error:', error);
-      // Even if there's an error with the API call, ensure local storage is cleared
       localStorage.removeItem('supabase.auth.token');
       sessionStorage.removeItem('supabase.auth.token');
     }
@@ -171,34 +139,22 @@ export const auth = {
 
   async getCurrentUser() {
     try {
-      // First check if we have a session in local storage
       const session = localStorage.getItem('supabase.auth.token');
       if (!session) {
         return null;
       }
       
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error) {
-        // If there's an error getting the user, clear any invalid session
-        console.error('Get user error:', error);
-        // Clear invalid session data
-        localStorage.removeItem('supabase.auth.token');
-        sessionStorage.removeItem('supabase.auth.token');
-        return null;
-      }
-      
+      const { data: { user } } = await supabase.auth.getUser();
       return user;
     } catch (error) {
       console.error('Get current user error:', error);
-      // Clear any potentially corrupted session data
       localStorage.removeItem('supabase.auth.token');
       sessionStorage.removeItem('supabase.auth.token');
       return null;
     }
   },
 
-  onAuthStateChange(callback: (event: string, session: any) => void) {
+  onAuthStateChange(callback: (event: string, session: unknown) => void) {
     return supabase.auth.onAuthStateChange(callback);
   }
 };
