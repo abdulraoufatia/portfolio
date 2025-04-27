@@ -114,9 +114,9 @@ function ArticleDetail() {
                 rehypePlugins={[rehypeRaw]}
                 className="text-gray-200 leading-relaxed"
                 components={{
-                  h1: ({...props}) => <h1 id={props.children?.toString().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')} {...props} />,
-                  h2: ({...props}) => <h2 id={props.children?.toString().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')} {...props} />,
-                  h3: ({...props}) => <h3 id={props.children?.toString().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')} {...props} />
+                  h1: ({children, ...props}) => <h1 id={children?.toString().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')} {...props}>{children}</h1>,
+                  h2: ({children, ...props}) => <h2 id={children?.toString().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')} {...props}>{children}</h2>,
+                  h3: ({children, ...props}) => <h3 id={children?.toString().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')} {...props}>{children}</h3>
                 }}
               >
                 {article.content}

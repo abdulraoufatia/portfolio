@@ -7,7 +7,7 @@ import './index.css';
 if (!document.querySelector('meta[http-equiv="Content-Security-Policy"]')) {
   const cspMeta = document.createElement('meta');
   cspMeta.httpEquiv = 'Content-Security-Policy';
-  cspMeta.content = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co";
+  cspMeta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.supabase.co";
   document.head.appendChild(cspMeta);
 }
 

@@ -11,7 +11,6 @@ function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
@@ -23,17 +22,17 @@ function Layout() {
 
   const navItems = [
     { to: '/', icon: Home, label: 'Home' },
-    { to: '/experience', icon: Briefcase, label: 'Experience' , label: 'Experience' },
+    { to: '/experience', icon: Briefcase, label: 'Experience' },
     { to: '/education', icon: GraduationCap, label: 'Education' },
     { to: '/projects', icon: FolderGit2, label: 'Projects' },
     { to: '/articles', icon: BookText, label: 'Articles' },
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-black/30 backdrop-blur-sm border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <NavLink 
               to="/" 
@@ -44,7 +43,7 @@ function Layout() {
             </NavLink>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden lg:flex items-center space-x-8">
               {navItems.map(({ to, icon: Icon, label }) => (
                 <NavLink
                   key={to}
@@ -87,7 +86,7 @@ function Layout() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
               aria-label={isMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={isMenuOpen}
             >
@@ -103,7 +102,7 @@ function Layout() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-black/30 backdrop-blur-sm border-t border-white/10"
+              className="lg:hidden bg-black/30 backdrop-blur-sm border-t border-white/10"
             >
               <div className="px-4 py-2 space-y-2">
                 {navItems.map(({ to, icon: Icon, label }) => (
@@ -156,7 +155,7 @@ function Layout() {
 
       {/* Main Content */}
       <main className="relative z-10 pt-20 min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Outlet />
         </div>
       </main>

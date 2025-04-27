@@ -23,6 +23,7 @@ export interface Article {
   updated_at: string;
   category: string;
   slug?: string;
+  visible: boolean;
 }
 
 export interface Experience {
@@ -294,6 +295,26 @@ export const articlesApi = {
       return data;
     } catch (error) {
       console.error('Failed to update article:', error);
+      throw error;
+    }
+  },
+
+  async toggleVisibility(id: string, visible: boolean) {
+    try {
+      const { data, error } = await supabase
+        .from('articles')
+        .update({ visible })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Toggle visibility error:', error);
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      console.error('Failed to toggle visibility:', error);
       throw error;
     }
   },
