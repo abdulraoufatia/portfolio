@@ -14,6 +14,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: black;
+  overflow-x: hidden;
 }
 
 /* Animated gradient text */
@@ -99,23 +100,23 @@ body {
 
 /* Markdown Styles */
 .markdown-content {
-  @apply text-gray-200;
+  @apply text-gray-200 max-w-full overflow-x-auto;
 }
 
 .markdown-content h1 {
-  @apply text-3xl font-bold mb-6 text-white;
+  @apply text-3xl sm:text-4xl font-bold mb-6 text-white;
 }
 
 .markdown-content h2 {
-  @apply text-2xl font-bold mb-4 text-white;
+  @apply text-2xl sm:text-3xl font-bold mb-4 text-white;
 }
 
 .markdown-content h3 {
-  @apply text-xl font-bold mb-3 text-white;
+  @apply text-xl sm:text-2xl font-bold mb-3 text-white;
 }
 
 .markdown-content p {
-  @apply mb-4 leading-relaxed;
+  @apply mb-4 leading-relaxed text-base sm:text-lg;
 }
 
 .markdown-content ul {
@@ -147,7 +148,7 @@ body {
 }
 
 .markdown-content img {
-  @apply max-w-full rounded-lg my-4;
+  @apply max-w-full h-auto rounded-lg my-4;
 }
 
 .markdown-content hr {
@@ -155,7 +156,7 @@ body {
 }
 
 .markdown-content table {
-  @apply w-full border-collapse mb-4;
+  @apply w-full border-collapse mb-4 overflow-x-auto block sm:table;
 }
 
 .markdown-content th,
@@ -167,9 +168,56 @@ body {
   @apply bg-white/10;
 }
 
+/* Responsive grid layouts */
+.grid-cols-responsive {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+/* Responsive text */
+.text-responsive {
+  @apply text-base sm:text-lg lg:text-xl;
+}
+
+/* Responsive padding */
+.p-responsive {
+  @apply p-4 sm:p-6 lg:p-8;
+}
+
+/* Responsive margins */
+.m-responsive {
+  @apply m-4 sm:m-6 lg:m-8;
+}
+
+/* Responsive container */
+.container-responsive {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Responsive images */
+.img-responsive {
+  @apply w-full h-auto object-cover;
+}
+
+/* Responsive cards */
+.card-responsive {
+  @apply p-4 sm:p-6 rounded-lg glass;
+}
+
+/* Responsive buttons */
+.btn-responsive {
+  @apply px-4 py-2 sm:px-6 sm:py-3 rounded-lg transition-colors;
+}
+
+/* Responsive flex layouts */
+.flex-responsive {
+  @apply flex flex-col sm:flex-row items-center gap-4;
+}
+
 /* MD Editor Overrides */
 .w-md-editor {
   @apply bg-black/20 !important;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .w-md-editor-text-pre > code,
@@ -191,17 +239,14 @@ body {
 
 /* Fix for markdown tables */
 .markdown-content table {
-  table-layout: fixed;
-  width: 100%;
+  min-width: 100%;
+  white-space: nowrap;
 }
 
-.markdown-content table th,
-.markdown-content table td {
-  word-break: break-word;
-  vertical-align: top;
-  text-align: left;
-  padding: 0.5rem 1rem;
-  line-height: 1.5;
+@media (min-width: 640px) {
+  .markdown-content table {
+    white-space: normal;
+  }
 }
 
 /* Fix for pipe symbol alignment in markdown editor */

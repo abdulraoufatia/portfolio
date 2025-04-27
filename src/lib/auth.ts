@@ -1,4 +1,10 @@
-import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
+import { Database } from './database.types';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
 // Rate limiting implementation
 const loginAttempts = new Map<string, { count: number; timestamp: number }>();
@@ -35,15 +41,12 @@ const validateEmail = (email: string): boolean => {
 
 export const auth = {
   async signIn(email: string, password: string, totpCode?: string) {
-    // Validate email
     if (!validateEmail(email)) {
       throw new Error('Invalid email format');
     }
 
-    // Sanitize email
     email = email.toLowerCase().trim();
 
-    // Check rate limiting
     if (isRateLimited(email)) {
       throw new Error('Too many login attempts. Please try again in 15 minutes.');
     }
@@ -52,75 +55,28 @@ export const auth = {
       let authResponse;
 
       if (totpCode) {
-        // Sign in with 2FA
         authResponse = await supabase.auth.verifyOtp({
           email,
           token: totpCode,
           type: 'totp'
         });
       } else {
-        // Initial sign in
         authResponse = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        // If 2FA is required, return special status
         if (authResponse.data?.user?.factors?.length > 0) {
           return { requires2FA: true, user: authResponse.data.user };
         }
       }
 
-      const { data, error } = authResponse;
-
-      if (error) {
-        recordLoginAttempt(email);
-        if (error.message.includes('Invalid login credentials')) {
-          const attempts = loginAttempts.get(email);
-          const remainingAttempts = MAX_ATTEMPTS - (attempts?.count || 0);
-          throw new Error(`Invalid email or password. ${remainingAttempts} attempts remaining.`);
-        }
-        throw error;
-      }
-
-      // Clear login attempts on successful login
+      const { data } = authResponse;
       loginAttempts.delete(email);
       return data;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Sign in failed. Please try again.');
-    }
-  },
-
-  async enroll2FA() {
-    try {
-      const { data, error } = await supabase.auth.mfa.enroll({
-        factorType: 'totp'
-      });
-
-      if (error) throw error;
-
-      return {
-        qrCode: data.totp.qr_code,
-        secret: data.totp.secret,
-      };
-    } catch (error) {
-      throw new Error('Failed to enable 2FA. Please try again.');
-    }
-  },
-
-  async verify2FA(totpCode: string) {
-    try {
-      const { data } = await supabase.auth.mfa.verify({
-        factorId: 'totp',
-        code: totpCode
-      });
-
-      return data;
-    } catch (error) {
-      throw new Error('Invalid 2FA code. Please try again.');
+    } catch (err) {
+      recordLoginAttempt(email);
+      throw err;
     }
   },
 
@@ -128,10 +84,9 @@ export const auth = {
     try {
       localStorage.removeItem('supabase.auth.token');
       sessionStorage.removeItem('supabase.auth.token');
-      
       await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
+    } catch (err) {
+      console.error('Sign out error:', err);
       localStorage.removeItem('supabase.auth.token');
       sessionStorage.removeItem('supabase.auth.token');
     }
@@ -140,14 +95,12 @@ export const auth = {
   async getCurrentUser() {
     try {
       const session = localStorage.getItem('supabase.auth.token');
-      if (!session) {
-        return null;
-      }
+      if (!session) return null;
       
       const { data: { user } } = await supabase.auth.getUser();
       return user;
-    } catch (error) {
-      console.error('Get current user error:', error);
+    } catch (err) {
+      console.error('Get current user error:', err);
       localStorage.removeItem('supabase.auth.token');
       sessionStorage.removeItem('supabase.auth.token');
       return null;
