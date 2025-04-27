@@ -3,7 +3,9 @@ FROM node:23-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 
-RUN npm ci
+# Install dependencies with retry mechanism
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
 
 COPY . .
 RUN npm run build
