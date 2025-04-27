@@ -11,7 +11,7 @@ interface State {
   error: Error | null;
 }
 
-class ErrorBoundary extends Component<Props, State> {
+export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -36,7 +36,7 @@ class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null
     });
-  }
+  };
 
   render(): ReactNode {
     if (this.state.hasError) {
@@ -46,14 +46,14 @@ class ErrorBoundary extends Component<Props, State> {
       
       return (
         <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
-          <div className="bg-red-500/20 text-red-300 p-4 rounded-lg mb-4 max-w-md">
+          <div className="bg-destructive/20 text-destructive-foreground p-6 rounded-lg max-w-md">
             <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
-            <p className="text-sm mb-4">
+            <p className="text-sm mb-4 text-muted-foreground">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
             <button
               onClick={this.handleReset}
-              className="flex items-center mx-auto px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
               <RefreshCw size={16} className="mr-2" />
               Try Again
@@ -66,5 +66,3 @@ class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
-
-export default ErrorBoundary;

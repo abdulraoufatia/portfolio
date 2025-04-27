@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { List, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Heading {
   id: string;
@@ -12,12 +13,11 @@ interface ArticleTocProps {
   content: string;
 }
 
-function ArticleToc({ content }: ArticleTocProps) {
-  const [headings, setHeadings] = useState<Heading[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+export default function ArticleToc({ content }: ArticleTocProps) {
+  const [headings, setHeadings] = React.useState<Heading[]>([]);
+  const [activeId, setActiveId] = React.useState<string | null>(null);
 
-  useEffect(() => {
-    // Parse markdown content to extract headings
+  React.useEffect(() => {
     const headingRegex = /^(#{1,3})\s+(.+)$/gm;
     const extractedHeadings: Heading[] = [];
     let match;
@@ -36,7 +36,7 @@ function ArticleToc({ content }: ArticleTocProps) {
     setHeadings(extractedHeadings);
   }, [content]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleScroll = () => {
       const headingElements = headings.map(heading => 
         document.getElementById(heading.id)
@@ -44,8 +44,7 @@ function ArticleToc({ content }: ArticleTocProps) {
 
       if (headingElements.length === 0) return;
 
-      // Find the heading that's currently in view
-      const scrollPosition = window.scrollY + 100; // Offset for better UX
+      const scrollPosition = window.scrollY + 100;
 
       for (let i = headingElements.length - 1; i >= 0; i--) {
         const element = headingElements[i];
@@ -55,18 +54,15 @@ function ArticleToc({ content }: ArticleTocProps) {
         }
       }
 
-      // If we're above all headings, set the first one as active
       if (headingElements[0] && headingElements[0].offsetTop > scrollPosition) {
         setActiveId(headings[0]?.id || null);
       }
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
+    handleScroll();
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [headings]);
 
   if (headings.length === 0) return null;
@@ -78,7 +74,7 @@ function ArticleToc({ content }: ArticleTocProps) {
       transition={{ delay: 0.3 }}
       className="hidden lg:block sticky top-24 self-start glass rounded-lg p-4 max-h-[calc(100vh-120px)] overflow-y-auto"
     >
-      <div className="flex items-center mb-3 text-blue-400">
+      <div className="flex items-center mb-3 text-primary">
         <List size={18} className="mr-2" />
         <h3 className="font-semibold">Table of Contents</h3>
       </div>
@@ -86,19 +82,21 @@ function ArticleToc({ content }: ArticleTocProps) {
         {headings.map((heading) => (
           <li 
             key={heading.id}
-            className={`transition-colors ${
-              heading.level === 1 ? 'ml-0' : 
-              heading.level === 2 ? 'ml-3' : 
-              'ml-6'
-            }`}
+            className={cn(
+              "transition-colors",
+              heading.level === 1 ? "ml-0" : 
+              heading.level === 2 ? "ml-3" : 
+              "ml-6"
+            )}
           >
             <a
               href={`#${heading.id}`}
-              className={`flex items-center hover:text-blue-400 ${
+              className={cn(
+                "flex items-center hover:text-primary transition-colors",
                 activeId === heading.id 
-                  ? 'text-blue-400 font-medium' 
-                  : 'text-gray-300'
-              }`}
+                  ? "text-primary font-medium" 
+                  : "text-muted-foreground"
+              )}
               onClick={(e) => {
                 e.preventDefault();
                 document.getElementById(heading.id)?.scrollIntoView({
@@ -108,7 +106,7 @@ function ArticleToc({ content }: ArticleTocProps) {
               }}
             >
               {heading.level > 1 && <ChevronRight size={14} className="mr-1 opacity-70" />}
-              <span className={`${heading.level === 1 ? 'font-medium' : ''} text-sm`}>
+              <span className={cn("text-sm", heading.level === 1 && "font-medium")}>
                 {heading.text}
               </span>
             </a>
@@ -118,5 +116,3 @@ function ArticleToc({ content }: ArticleTocProps) {
     </motion.div>
   );
 }
-
-export default ArticleToc;

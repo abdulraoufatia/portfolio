@@ -75,19 +75,6 @@ export default {
           to: { height: '0' },
         },
       },
-      spacing: {
-        '18': '4.5rem',
-        '112': '28rem',
-        '128': '32rem',
-      },
-      maxWidth: {
-        '8xl': '88rem',
-        '9xl': '96rem',
-      },
-      minHeight: {
-        'screen-75': '75vh',
-        'screen-85': '85vh',
-      },
     },
   },
   plugins: [
