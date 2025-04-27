@@ -7,34 +7,24 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
     container:
       image: node:20-alpine
+<<<<<<< Updated upstream
+=======
+      
+>>>>>>> Stashed changes
     steps:
       - uses: actions/checkout@v4
       
       - name: Install dependencies
-        run: |
-          attempt=1
-          max_attempts=3
-          while [ $attempt -le $max_attempts ]; do
-            echo "Attempt $attempt of $max_attempts: Installing dependencies..."
-            if npm ci; then
-              echo "Dependencies installed successfully"
-              break
-            fi
-            attempt=$((attempt + 1))
-            if [ $attempt -le $max_attempts ]; then
-              echo "Retrying in 5 seconds..."
-              sleep 5
-            fi
-          done
-          if [ $attempt -gt $max_attempts ]; then
-            echo "Failed to install dependencies after $max_attempts attempts"
-            exit 1
-          fi
+        run: npm ci
         
+      - name: Run type check
+        run: npm run type-check
+        
+<<<<<<< Updated upstream
       - name: Run ESLint
         run: npm run lint
         
@@ -92,8 +82,12 @@ jobs:
             echo "Failed to install dependencies after $max_attempts attempts"
             exit 1
           fi
+=======
+      - name: Run tests
+        run: npm run test
+>>>>>>> Stashed changes
         
-      - name: Build
+      - name: Build application
         run: npm run build
         
       - name: Upload build artifacts
@@ -103,9 +97,16 @@ jobs:
           path: dist/
 
   docker:
+<<<<<<< Updated upstream
     runs-on: ubuntu-latest
     needs: [build, security-scan]
     if: github.ref == 'refs/heads/main'
+=======
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+>>>>>>> Stashed changes
     steps:
       - uses: actions/checkout@v4
       
@@ -125,7 +126,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
+<<<<<<< Updated upstream
       - name: Build and push
+=======
+      - name: Build and push Docker image
+>>>>>>> Stashed changes
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -134,6 +139,7 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
           cache-from: type=gha
+<<<<<<< Updated upstream
           cache-to: type=gha,mode=max
 
   deploy:
@@ -152,3 +158,6 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+=======
+          cache-to: type=gha,mode=max
+>>>>>>> Stashed changes
